@@ -4,6 +4,7 @@ Homework 3.1:
 Answer: 
 13
 
+Task:
 Download the students.json file from the Download Handout link and import it into your local Mongo instance with this command:
 
 mongoimport -d school -c students < students.json

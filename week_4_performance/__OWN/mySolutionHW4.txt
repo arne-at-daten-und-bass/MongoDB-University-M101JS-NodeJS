@@ -1,0 +1,290 @@
+---
+Homework 4.1:
+
+Answer: 
+db.products.find( { 'brand' : "GE" } ).sort( { price : 1 } )
+db.products.find( { $and : [ { price : { $gt : 30 } },{ price : { $lt : 50 } } ] } ).sort( { brand : 1 } )
+
+Task:
+Suppose you have a collection with the following indexes:
+
+> db.products.getIndexes()
+[
+	{
+		"v" : 1,
+		"key" : {
+			"_id" : 1
+		},
+		"ns" : "store.products",
+		"name" : "_id_"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"sku" : 1
+		},
+                "unique" : true,
+		"ns" : "store.products",
+		"name" : "sku_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"price" : -1
+		},
+		"ns" : "store.products",
+		"name" : "price_-1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"description" : 1
+		},
+		"ns" : "store.products",
+		"name" : "description_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"category" : 1,
+			"brand" : 1
+		},
+		"ns" : "store.products",
+		"name" : "category_1_brand_1"
+	},
+	{
+		"v" : 1,
+		"key" : {
+			"reviews.author" : 1
+		},
+		"ns" : "store.products",
+		"name" : "reviews.author_1"
+	}
+Which of the following queries can utilize at least one index to find all matching documents or to sort? Check all that apply.
+
+
+(Check) db.products.find( { 'brand' : "GE" } ).sort( { price : 1 } )
+(Check) db.products.find( { $and : [ { price : { $gt : 30 } },{ price : { $lt : 50 } } ] } ).sort( { brand : 1 } )
+db.products.find( { 'brand' : "GE" } )
+db.products.find( { brand : 'GE' } ).sort( { category : 1, brand : -1 } ).explain()
+---
+
+
+---
+Homework 4.2:
+
+Answer: 
+The query uses an index to determine the order in which to return result documents.
+The query examines 251120 documents.
+
+Task:
+
+Suppose you have a collection called tweets whose documents contain information about the created_at time of the tweet and the user's followers_count at the time they issued the tweet. What can you infer from the following explain output?
+
+> db.tweets.explain("executionStats").find({"user.followers_count":{$gt:1000}}).limit(10).skip(5000).sort( { created_at : 1 } )
+{
+    "queryPlanner" : {
+        "plannerVersion" : 1,
+        "namespace" : "twitter.tweets",
+        "indexFilterSet" : false,
+        "parsedQuery" : {
+            "user.followers_count" : {
+                "$gt" : 1000
+            }
+        },
+        "winningPlan" : {
+            "stage" : "LIMIT",
+            "limitAmount" : 0,
+            "inputStage" : {
+                "stage" : "SKIP",
+                "skipAmount" : 0,
+                "inputStage" : {
+                    "stage" : "FETCH",
+                    "filter" : {
+                        "user.followers_count" : {
+                            "$gt" : 1000
+                        }
+                    },
+                    "inputStage" : {
+                        "stage" : "IXSCAN",
+                        "keyPattern" : {
+                            "created_at" : -1
+                        },
+                        "indexName" : "created_at_-1",
+                        "isMultiKey" : false,
+                        "direction" : "backward",
+                        "indexBounds" : {
+                            "created_at" : [
+                                "[MinKey, MaxKey]"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "rejectedPlans" : [ ]
+    },
+    "executionStats" : {
+        "executionSuccess" : true,
+        "nReturned" : 10,
+        "executionTimeMillis" : 563,
+        "totalKeysExamined" : 251120,
+        "totalDocsExamined" : 251120,
+        "executionStages" : {
+            "stage" : "LIMIT",
+            "nReturned" : 10,
+            "executionTimeMillisEstimate" : 500,
+            "works" : 251121,
+            "advanced" : 10,
+            "needTime" : 251110,
+            "needFetch" : 0,
+            "saveState" : 1961,
+            "restoreState" : 1961,
+            "isEOF" : 1,
+            "invalidates" : 0,
+            "limitAmount" : 0,
+            "inputStage" : {
+                "stage" : "SKIP",
+                "nReturned" : 10,
+                "executionTimeMillisEstimate" : 500,
+                "works" : 251120,
+                "advanced" : 10,
+                "needTime" : 251110,
+                "needFetch" : 0,
+                "saveState" : 1961,
+                "restoreState" : 1961,
+                "isEOF" : 0,
+                "invalidates" : 0,
+                "skipAmount" : 0,
+                "inputStage" : {
+                    "stage" : "FETCH",
+                    "filter" : {
+                        "user.followers_count" : {
+                            "$gt" : 1000
+                        }
+                    },
+                    "nReturned" : 5010,
+                    "executionTimeMillisEstimate" : 490,
+                    "works" : 251120,
+                    "advanced" : 5010,
+                    "needTime" : 246110,
+                    "needFetch" : 0,
+                    "saveState" : 1961,
+                    "restoreState" : 1961,
+                    "isEOF" : 0,
+                    "invalidates" : 0,
+                    "docsExamined" : 251120,
+                    "alreadyHasObj" : 0,
+                    "inputStage" : {
+                        "stage" : "IXSCAN",
+                        "nReturned" : 251120,
+                        "executionTimeMillisEstimate" : 100,
+                        "works" : 251120,
+                        "advanced" : 251120,
+                        "needTime" : 0,
+                        "needFetch" : 0,
+                        "saveState" : 1961,
+                        "restoreState" : 1961,
+                        "isEOF" : 0,
+                        "invalidates" : 0,
+                        "keyPattern" : {
+                            "created_at" : -1
+                        },
+                        "indexName" : "created_at_-1",
+                        "isMultiKey" : false,
+                        "direction" : "backward",
+                        "indexBounds" : {
+                            "created_at" : [
+                                "[MinKey, MaxKey]"
+                            ]
+                        },
+                        "keysExamined" : 251120,
+                        "dupsTested" : 0,
+                        "dupsDropped" : 0,
+                        "seenInvalidated" : 0,
+                        "matchTested" : 0
+                    }
+                }
+            }
+        }
+    },
+    "serverInfo" : {
+        "host" : "generic-name.local",
+        "port" : 27017,
+        "version" : "3.0.1",
+        "gitVersion" : "534b5a3f9d10f00cd27737fbcd951032248b5952"
+    },
+    "ok" : 1
+}
+
+The query uses an index to determine which documents match.
+(Check) The query uses an index to determine the order in which to return result documents.
+The query is a covered query.
+(Check) The query examines 251120 documents.
+The query returns 251120 documents.
+---
+
+
+---
+Homework 4.3:
+
+Answer: 
+getPosts Index: db.posts.ensureIndex({ date : -1})
+getPostsByTag Index: db.posts.ensureIndex({ tags : 1,  date : -1}) 
+getPostByPermalink Index: db.posts.ensureIndex({ permalink : 1})
+
+Task:
+If you have any difficulty using MongoProc, here are 2 video lectures showing how to set it up. 
+
+You will need to download one of the following versions of the MongoProc client, which will verify on your local machine (port 8082) that the signup and login pages of the blog work properly. 
+
+Download MongoProc 
+
+Making the Blog fast
+To get started, please download hw4-3.zip from the Download Handout link and unpack file to your computer. This assignment requires Mongo 2.2 or above.
+
+In this homework assignment you will be adding some indexes to the post collection to make the blog fast.
+
+We have provided the full code for the blog application and you don't need to make any changes, or even run the blog. But you can, for fun.
+
+We are also providing a patriotic (if you are an American) data set for the blog. There are 1000 entries with lots of comments and tags. You must load this dataset to complete the problem.
+
+# from the mongo shell
+use blog
+db.posts.drop()
+# from the a mac or PC terminal window
+mongoimport -d blog -c posts < posts.json
+The blog has been enhanced so that it can also display the top 10 most recent posts by tag. There are hyperlinks from the post tags to the page that displays the 10 most recent blog entries for that tag. (run the blog and it will be obvious)
+
+Your assignment is to make the following blog pages fast:
+
+The blog home page
+The page that displays blog posts by tag (http://localhost:8082/tag/whatever)
+The page that displays a blog entry by permalink (http://localhost:8082/post/permalink)
+By fast, we mean that indexes should be in place to satisfy these queries such that we only need to scan the number of documents we are going to return.
+
+To figure out what queries you need to optimize, you can read the code in posts.js and see what queries it is doing to return the data needed for the relevant pages. Isolate those queries and use explain to explore.
+
+Once you have added the indexes to make those pages fast, just validate your work with MongoProc.
+---
+
+
+---
+Homework 4.4:
+
+Answer: 
+15820
+
+Task:
+In this problem you will analyze a profile log taken from a mongoDB instance. To start, please download sysprofile.json from Download Handout link and import it with the following command:
+
+mongoimport -d m101 -c profile < sysprofile.json
+
+Now query the profile data, looking for all queries to the students collection in the database school2, sorted in order of decreasing latency. What is the latency of the longest running operation to the collection, in milliseconds?
+
+
+19776550
+10000000
+5580001
+(Check) 15820
+2350
